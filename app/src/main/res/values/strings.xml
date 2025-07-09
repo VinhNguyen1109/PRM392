@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FamilyNoteApp</string>
+    <string-array name="interaction_types">
+        <item>Gọi điện</item>
+        <item>Gặp mặt</item>
+        <item>Gửi quà</item>
+        <item>Khác</item>
+    </string-array>
+
+</resources>

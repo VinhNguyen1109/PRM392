@@ -1,0 +1,51 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_border">
+    <TextView
+        android:id="@+id/txtMemberName"
+        android:text="Người thân: "
+        android:textSize="14sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp" />
+    <TextView
+        android:id="@+id/txtTitle"
+        android:text="Tiêu đề"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/txtDescription"
+        android:text="Mô tả"
+        android:textSize="15sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:id="@+id/txtTime"
+        android:text="Thời gian"
+        android:textSize="14sp"
+        android:textColor="#666666"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/txtStatus"
+        android:text="Trạng thái: Chưa hoàn thành"
+        android:textSize="14sp"
+        android:textColor="#FF5722"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp" />
+
+
+
+</LinearLayout>
