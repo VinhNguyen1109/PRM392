@@ -1,11 +1,17 @@
 package com.example.familynoteapp;
 
+
+
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -47,6 +53,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Intent intent = new Intent(this, ScheduleForegroundService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 100);
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Log.d("vinhnc", "Starting ScheduleForegroundService in foreground");
             startForegroundService(intent);
@@ -123,4 +137,16 @@ public class MainActivity extends AppCompatActivity {
                 .setNegativeButton("Huỷ", null)
                 .show();
     }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("Permission", "✅ Đã được cấp quyền POST_NOTIFICATIONS");
+            } else {
+                Log.d("Permission", "❌ Người dùng từ chối quyền POST_NOTIFICATIONS");
+            }
+        }
+    }
+
 }

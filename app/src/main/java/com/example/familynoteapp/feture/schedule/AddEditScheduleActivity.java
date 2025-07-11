@@ -17,6 +17,8 @@ import com.example.familynoteapp.MainViewModel;
 import com.example.familynoteapp.R;
 import com.example.familynoteapp.model.FamilyMember;
 import com.example.familynoteapp.model.ScheduleTask;
+import com.example.familynoteapp.util.TaskScheduler;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
@@ -97,6 +99,7 @@ public class AddEditScheduleActivity extends AppCompatActivity {
                 editingTask.setCompleted(completed);
                 editingTask.setMemberId(memberId);
                 viewModel.update(editingTask);
+                TaskScheduler.scheduleTaskNotification(this, editingTask); // khi update
             } else {
                 ScheduleTask newTask = new ScheduleTask();
                 newTask.setTitle(title);
@@ -104,7 +107,11 @@ public class AddEditScheduleActivity extends AppCompatActivity {
                 newTask.setDateTime(dateTime);
                 newTask.setCompleted(completed);
                 newTask.setMemberId(memberId);
-                viewModel.insert(newTask);
+                viewModel.insertAndSchedule(newTask, this);
+
+                TaskScheduler.scheduleTaskNotification(this, newTask); // khi insert
+
+
             }
 
             Intent intent = new Intent(this, ScheduleActivity.class);

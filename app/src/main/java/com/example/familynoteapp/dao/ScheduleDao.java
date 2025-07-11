@@ -17,7 +17,7 @@ public interface ScheduleDao {
     LiveData<List<ScheduleTask>> getTasksForMember(int memberId);
 
     @Insert
-    void insert(ScheduleTask task);
+    long insertAndReturnId(ScheduleTask task);
 
     @Update
     void update(ScheduleTask task);
