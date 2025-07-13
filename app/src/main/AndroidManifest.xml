@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <application
+        android:name=".feture.theme.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -28,6 +29,8 @@
         <activity android:name=".feture.dashboard.DashboardActivity" />
         <activity android:name=".feture.schedule.ScheduleActivity" />
         <activity android:name=".feture.schedule.AddEditScheduleActivity" />
+        <activity android:name=".feture.interaction.ImagePreviewActivity" />
+        <activity android:name=".feture.theme.SettingsActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

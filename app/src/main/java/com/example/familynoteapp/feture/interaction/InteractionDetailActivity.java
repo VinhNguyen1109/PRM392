@@ -1,13 +1,11 @@
 package com.example.familynoteapp.feture.interaction;
 
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -15,10 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
 import com.example.familynoteapp.R;
 import com.example.familynoteapp.model.Interaction;
 
@@ -28,12 +22,12 @@ import java.util.List;
 import java.util.Locale;
 
 public class InteractionDetailActivity extends AppCompatActivity {
-    private static final String TAG = "InteractionDetail";
+    private static final String TAG = "Vinhnc";
 
     private InteractionViewModel viewModel;
     private TextView txtType, txtNote, txtDate;
     private ImageView imgPhoto;
-    private RecyclerView recyclerExtraPhotos;
+    private RecyclerView recyclerVerticalPhotos;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,11 +63,8 @@ public class InteractionDetailActivity extends AppCompatActivity {
         txtNote = findViewById(R.id.txtNoteDetail);
         txtDate = findViewById(R.id.txtDateDetail);
         imgPhoto = findViewById(R.id.imgPhotoDetail);
-        recyclerExtraPhotos = findViewById(R.id.recyclerExtraPhotosDetail);
-
-        recyclerExtraPhotos.setLayoutManager(
-                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        );
+        recyclerVerticalPhotos = findViewById(R.id.recyclerVerticalPhotos);
+        recyclerVerticalPhotos.setLayoutManager(new LinearLayoutManager(this)); // chiều dọc
     }
 
     private void bindData(Interaction interaction) {
@@ -83,7 +74,7 @@ public class InteractionDetailActivity extends AppCompatActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         txtDate.setText("Ngày: " + sdf.format(interaction.date));
 
-        // Load ảnh chính với Glide
+        // Load ảnh đại diện ở ImageView to
         if (interaction.photoUri != null && !interaction.photoUri.trim().isEmpty()) {
             Uri photoUri = Uri.parse(interaction.photoUri);
             Log.d(TAG, "Loading photoUri: " + photoUri);
@@ -91,28 +82,14 @@ public class InteractionDetailActivity extends AppCompatActivity {
                     .load(photoUri)
                     .placeholder(R.drawable.ic_image_placeholder)
                     .error(R.drawable.ic_image_placeholder)
-                    .listener(new RequestListener<Drawable>() {
-                        @Override
-                        public boolean onLoadFailed(@Nullable GlideException e, @Nullable Object model,
-                                                    @NonNull Target<Drawable> target, boolean isFirstResource) {
-                            Log.e(TAG, "Glide failed: " + model, e);
-                            return false; // cho Glide xử lý hiển thị placeholder/error
-                        }
-
-                        @Override
-                        public boolean onResourceReady(@NonNull Drawable resource, @NonNull Object model,
-                                                       @NonNull Target<Drawable> target, @NonNull DataSource dataSource, boolean isFirstResource) {
-                            Log.d(TAG, "Glide loaded: " + model);
-                            return false;
-                        }
-                    })
                     .into(imgPhoto);
         } else {
             imgPhoto.setImageResource(R.drawable.ic_image_placeholder);
         }
 
-        // Load ảnh bổ sung nếu có
+        // Tạo list mới để hiển thị trong recyclerView: thêm ảnh đại diện vào đầu list
         List<String> extraPhotos = (interaction.extraPhotoUris != null) ? interaction.extraPhotoUris : new ArrayList<>();
-        recyclerExtraPhotos.setAdapter(new ExtraPhotoAdapter(this, extraPhotos));
+        recyclerVerticalPhotos.setAdapter(new VerticalPhotoAdapter(this, interaction.photoUri, extraPhotos));
     }
+
 }

@@ -1,12 +1,12 @@
 package com.example.familynoteapp.feture.interaction;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -20,35 +20,30 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExtraPhotoAdapter extends RecyclerView.Adapter<ExtraPhotoAdapter.PhotoViewHolder> {
+public class VerticalPhotoAdapter extends RecyclerView.Adapter<VerticalPhotoAdapter.PhotoViewHolder> {
 
     private static final String TAG = "Vinhnc";
     private final Context context;
-    private final List<Uri> photoUris = new ArrayList<>();
+    private final String mainPhotoUriString;  // Ảnh đại diện
+    private final List<String> extraPhotoUriStrings = new ArrayList<>(); // Chỉ các extra photos
+    private final List<Uri> extraPhotoUris = new ArrayList<>();
 
-    public interface OnPhotoRemoveListener {
-        void onRemove(int position);
-    }
-
-    private OnPhotoRemoveListener removeListener;
-
-    public void setOnPhotoRemoveListener(OnPhotoRemoveListener listener) {
-        this.removeListener = listener;
-    }
-
-    public ExtraPhotoAdapter(Context context, List<String> uriStrings) {
+    public VerticalPhotoAdapter(Context context, String mainPhotoUriString, List<String> extraPhotoUriStrings) {
         this.context = context;
-        setDataFromStrings(uriStrings);
+        this.mainPhotoUriString = mainPhotoUriString;
+        setDataFromStrings(extraPhotoUriStrings);
     }
 
     private void setDataFromStrings(List<String> uriStrings) {
-        photoUris.clear();
+        extraPhotoUris.clear();
+        extraPhotoUriStrings.clear();
         if (uriStrings != null) {
             for (String s : uriStrings) {
                 if (s != null && !s.trim().isEmpty()) {
                     Uri parsed = parseSafeUri(s);
                     if (parsed != null) {
-                        photoUris.add(parsed);
+                        extraPhotoUris.add(parsed);
+                        extraPhotoUriStrings.add(s);
                     } else {
                         Log.e(TAG, "Cannot parse uri: " + s);
                     }
@@ -57,14 +52,8 @@ public class ExtraPhotoAdapter extends RecyclerView.Adapter<ExtraPhotoAdapter.Ph
         }
     }
 
-    public void updateData(List<String> newUriStrings) {
-        setDataFromStrings(newUriStrings);
-        notifyDataSetChanged();
-    }
-
     private Uri parseSafeUri(String s) {
         try {
-            // Trường hợp content provider của Google Photos: giải mã phần content
             if (s.startsWith("content://com.google.android.apps.photos.contentprovider")) {
                 int start = s.indexOf("content%3A");
                 int end = s.indexOf("/ORIGINAL");
@@ -84,36 +73,43 @@ public class ExtraPhotoAdapter extends RecyclerView.Adapter<ExtraPhotoAdapter.Ph
     @NonNull
     @Override
     public PhotoViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_extra_photo, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_vertical_photo, parent, false);
         return new PhotoViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull PhotoViewHolder holder, int position) {
-        Uri uri = photoUris.get(position);
+        Uri uri = extraPhotoUris.get(position);
         Glide.with(context)
                 .load(uri)
                 .placeholder(R.drawable.ic_image_placeholder)
-                .into(holder.imgExtraPhoto);
+                .into(holder.imgVerticalPhoto);
 
-        holder.btnRemovePhoto.setOnClickListener(v -> {
-            if (removeListener != null) removeListener.onRemove(position);
+        holder.imgVerticalPhoto.setOnClickListener(v -> {
+            ArrayList<String> fullList = new ArrayList<>();
+            if (mainPhotoUriString != null && !mainPhotoUriString.isEmpty()) {
+                fullList.add(mainPhotoUriString); // Thêm ảnh đại diện vào đầu
+            }
+            fullList.addAll(extraPhotoUriStrings); // Thêm extra photos
+
+            Intent intent = new Intent(context, ImagePreviewActivity.class);
+            intent.putExtra("initial_uri", extraPhotoUriStrings.get(position)); // uri đang click
+            intent.putStringArrayListExtra("photo_uris", fullList); // toàn bộ list (có cả ảnh đại diện)
+            context.startActivity(intent);
         });
     }
 
     @Override
     public int getItemCount() {
-        return photoUris.size();
+        return extraPhotoUris.size();
     }
 
     static class PhotoViewHolder extends RecyclerView.ViewHolder {
-        ImageView imgExtraPhoto;
-        ImageButton btnRemovePhoto;
+        ImageView imgVerticalPhoto;
 
         public PhotoViewHolder(@NonNull View itemView) {
             super(itemView);
-            imgExtraPhoto = itemView.findViewById(R.id.imgExtraPhoto);
-            btnRemovePhoto = itemView.findViewById(R.id.btnRemovePhoto);
+            imgVerticalPhoto = itemView.findViewById(R.id.imgVerticalPhoto);
         }
     }
 }

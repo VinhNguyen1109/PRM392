@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.*;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -42,6 +43,7 @@ public class FamilyDetailActivity extends AppCompatActivity {
     private InteractionViewModel interactionViewModel;
     private MainViewModel mainViewModel;
     private FamilyMember member;
+    private Spinner spinnerType;
 
     private final List<Interaction> allInteractions = new ArrayList<>();
     private String keyword = "", selectedType = "", selectedDate = "";
@@ -60,6 +62,7 @@ public class FamilyDetailActivity extends AppCompatActivity {
         setupAddInteractionLauncher();
         setupPickImageLauncher();
         setupListeners();
+        setupSpinner();
     }
 
     private void initViews() {
@@ -71,6 +74,7 @@ public class FamilyDetailActivity extends AppCompatActivity {
         searchView = findViewById(R.id.searchView);
         recyclerInteractions = findViewById(R.id.recyclerInteractions);
         btnAddInteraction = findViewById(R.id.btnAddInteraction);
+        spinnerType = findViewById(R.id.spinnerType);
     }
 
     private void initViewModels() {
@@ -99,6 +103,37 @@ public class FamilyDetailActivity extends AppCompatActivity {
             applyFilters();
         });
     }
+
+
+    private void setupSpinner() {
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this,
+                R.array.interaction_types_search,
+                android.R.layout.simple_spinner_item
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerType.setAdapter(adapter);
+
+        spinnerType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String type = parent.getItemAtPosition(position).toString();
+                if (type.equals("Tất cả")) {
+                    selectedType = "";
+                } else {
+                    selectedType = type;
+                }
+                applyFilters();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedType = "";
+                applyFilters();
+            }
+        });
+    }
+
 
     private void loadMemberAvatar() {
         if (member.photoUri == null || member.photoUri.isEmpty()) {

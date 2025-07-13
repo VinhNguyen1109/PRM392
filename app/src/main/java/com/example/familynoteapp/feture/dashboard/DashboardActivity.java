@@ -35,6 +35,12 @@ public class DashboardActivity extends AppCompatActivity {
         txtTopMember = findViewById(R.id.txtTopMember);
         pieChart = findViewById(R.id.pieChart); // Sửa từ View sang PieChart
 
+
+        int textColor = getColor(R.color.orange); // Hoặc màu text bạn muốn (có thể lấy từ theme)
+        pieChart.getLegend().setTextColor(textColor);
+        pieChart.getDescription().setTextColor(textColor);
+        pieChart.setEntryLabelColor(textColor);
+
         // ViewModel
         viewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
 

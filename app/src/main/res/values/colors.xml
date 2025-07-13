@@ -4,4 +4,15 @@
     <color name="white">#FFFFFFFF</color>
     <color name="purple_500">#6200EE</color>
     <color name="selector_nav_color">#CFBBF0</color>
+
+    <color name="orange">#FFA500</color> <!-- Hoặc màu cam bạn thích -->
+
+
+
+    <color name="colorPrimary">#512DA8</color> <!-- Deep Purple 700 -->
+    <color name="colorPrimaryDark">#311B92</color> <!-- Deep Purple 900 -->
+    <color name="colorAccent">#9575CD</color> <!-- Purple 300 -->
+    <color name="background">#F3F0F7</color> <!-- Màu nền sáng nhẹ tím xám -->
+    <color name="textPrimary">#212121</color>
+
 </resources>
