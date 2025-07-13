@@ -15,4 +15,9 @@
         android:id="@+id/nav_settings"
         android:icon="@drawable/ic_settings_theme"
         android:title="Cài đặt theme" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_profile"
+        android:title="Cá nhân" />
+
 </menu>

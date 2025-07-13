@@ -31,6 +31,7 @@
         <activity android:name=".feture.schedule.AddEditScheduleActivity" />
         <activity android:name=".feture.interaction.ImagePreviewActivity" />
         <activity android:name=".feture.theme.SettingsActivity" />
+        <activity android:name=".feture.profile.ProfileActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

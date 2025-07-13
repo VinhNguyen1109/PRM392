@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import com.example.familynoteapp.MainActivity;
 import com.example.familynoteapp.R;
 import com.example.familynoteapp.feture.dashboard.DashboardActivity;
+import com.example.familynoteapp.feture.profile.ProfileActivity;
 import com.example.familynoteapp.feture.schedule.ScheduleActivity;
 import com.example.familynoteapp.feture.theme.SettingsActivity;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -59,6 +60,11 @@ public class BottomNavFragment extends Fragment {
                     context.startActivity(new Intent(context, SettingsActivity.class));
                 }
                 return true;
+            }else if (id == R.id.nav_profile) {
+                if (!(context instanceof ProfileActivity)) {
+                    context.startActivity(new Intent(context, ProfileActivity.class));
+                }
+                return true;
             }
 
             return false;
@@ -73,8 +79,9 @@ public class BottomNavFragment extends Fragment {
             bottomNavigation.setSelectedItemId(R.id.nav_schedule);
         }else if (getActivity() instanceof SettingsActivity) {
             bottomNavigation.setSelectedItemId(R.id.nav_settings);
+        }else if (getActivity() instanceof ProfileActivity) {
+            bottomNavigation.setSelectedItemId(R.id.nav_profile);
         }
-
     }
 
 }
