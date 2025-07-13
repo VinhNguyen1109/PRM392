@@ -28,4 +28,7 @@ public interface FamilyMemberDao {
     @Query("SELECT * FROM family_members WHERE id = :id LIMIT 1")
     LiveData<FamilyMember> getMemberById(int id);
 
+
+    @Query("SELECT * FROM family_members WHERE strftime('%d-%m', birthday) = :today")
+    List<FamilyMember> getBirthdaysToday(String today);
 }

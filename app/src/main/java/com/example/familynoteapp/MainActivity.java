@@ -14,15 +14,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.example.familynoteapp.feture.family.AddFamilyMemberActivity;
 import com.example.familynoteapp.feture.family.FamilyAdapter;
 import com.example.familynoteapp.feture.family.FamilyDetailActivity;
 import com.example.familynoteapp.feture.schedule.service.ScheduleForegroundService;
 import com.example.familynoteapp.model.FamilyMember;
+import com.example.familynoteapp.worker.BirthdayCheckWorker;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,6 +48,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // Đặt Worker kiểm tra sinh nhật hàng ngày
+        PeriodicWorkRequest birthdayCheckRequest = new PeriodicWorkRequest.Builder(BirthdayCheckWorker.class, 1, TimeUnit.DAYS)
+                .build();
+
+        // Đăng ký công việc với WorkManager
+        WorkManager.getInstance(this).enqueue(birthdayCheckRequest);
         startScheduleService();
         initViewModel();
         bindViews();

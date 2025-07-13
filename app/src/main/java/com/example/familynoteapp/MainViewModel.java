@@ -20,6 +20,9 @@ public class MainViewModel extends AndroidViewModel {
         super(application);
          db = AppDatabaseSingleton.getInstance(application);
         allFamily = db.familyMemberDao().getAll();
+//        for (FamilyMember member : allFamily.getValue()) {
+//            android.util.Log.d("MainViewModel", "name: "+member.name+" date : "+member.birthday);
+//        }
         allFamily.observeForever(list -> {
             android.util.Log.d("MainViewModel", "Tổng số người thân: " + (list != null ? list.size() : 0));
         });
