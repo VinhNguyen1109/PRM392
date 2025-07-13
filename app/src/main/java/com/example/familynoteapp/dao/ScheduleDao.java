@@ -19,6 +19,9 @@ public interface ScheduleDao {
     @Insert
     void insert(ScheduleTask task);
 
+    @Insert
+    long insertAndReturnId(ScheduleTask task);
+
     @Update
     void update(ScheduleTask task);
 

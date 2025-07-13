@@ -1,64 +1,125 @@
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FFF9FB">
 
-    <!-- Nội dung chính -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="0dp"
         android:orientation="vertical"
-        android:padding="16dp"> <!-- Không cần margin khi FAB đã tách -->
+        android:padding="12dp">
 
-        <!-- Thông tin người thân -->
+        <!-- CardView: Thông tin người thân -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@android:color/white">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:padding="12dp">
+
+                <ImageView
+                    android:id="@+id/imgAvatar"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_marginEnd="12dp"
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/circle_background"
+                    android:src="@drawable/ic_user_placeholder" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/txtName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tên người thân"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:textColor="#000" />
+
+                    <TextView
+                        android:id="@+id/txtRelation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Mối quan hệ"
+                        android:textColor="#666"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Hàng filter -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_marginBottom="8dp">
 
-            <ImageView
-                android:id="@+id/imgAvatar"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/circle_background"
-                android:scaleType="centerCrop"
-                android:src="@drawable/ic_user_placeholder" />
-
-            <LinearLayout
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/searchView"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_height="40dp"
+                android:queryHint="Tìm ghi chú..."
+                android:background="@drawable/bg_searchview_rounded"
+                android:layout_marginEnd="8dp" />
 
-                <TextView
-                    android:id="@+id/txtName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Tên người thân"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+            <Spinner
+                android:id="@+id/spinnerType"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:backgroundTint="@color/purple_500"
+                android:layout_marginEnd="8dp" />
 
-                <TextView
-                    android:id="@+id/txtRelation"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Mối quan hệ"
-                    android:textColor="#666666"
-                    android:textSize="14sp" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/txtDateFilter"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:drawableLeft="@drawable/ic_calendar"
+                android:drawablePadding="4dp"
+                android:gravity="center_vertical"
+                android:text="Chọn ngày"
+                android:textColor="#000"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/bg_searchview_rounded"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:id="@+id/btnClearFilter"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:text="Xoá"
+                android:textColor="@android:color/white"
+                android:background="@drawable/bg_clearfilter_rounded"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp" />
         </LinearLayout>
 
-        <!-- Danh sách tương tác -->
+        <!-- RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerInteractions"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:clipToPadding="false" />
+            android:clipToPadding="false"
+            android:paddingTop="4dp" />
     </LinearLayout>
 
     <!-- Nút thêm -->
@@ -67,10 +128,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="120dp"
-        android:contentDescription="Thêm"
-        android:src="@android:drawable/ic_input_add"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_add"
         app:backgroundTint="@color/purple_500"
         app:tint="@android:color/white" />
 
@@ -81,5 +140,4 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

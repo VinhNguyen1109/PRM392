@@ -6,7 +6,6 @@
     android:layout_height="match_parent"
     android:background="#FAFAFA">
 
-    <!-- Cuộn phần nội dung -->
     <ScrollView
         android:id="@+id/scrollContent"
         android:layout_width="0dp"
@@ -67,11 +66,11 @@
                 android:padding="12dp"
                 android:layout_marginBottom="16dp" />
 
-            <!-- Ảnh đính kèm -->
+            <!-- Ảnh đại diện -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Ảnh đính kèm (tuỳ chọn)"
+                android:text="Ảnh hiển thị đại diện"
                 android:textStyle="bold"
                 android:textSize="14sp"
                 android:layout_marginBottom="8dp"/>
@@ -83,6 +82,33 @@
                 android:scaleType="centerCrop"
                 android:background="@drawable/circle_background"
                 android:layout_marginBottom="16dp" />
+
+            <!-- Ảnh bổ sung -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ảnh bổ sung"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Nút chọn thêm ảnh -->
+            <Button
+                android:id="@+id/btnAddExtraPhotos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chọn thêm ảnh"
+                android:layout_marginBottom="8dp"
+                android:backgroundTint="@color/purple_500"
+                android:textColor="@android:color/white" />
+
+            <!-- RecyclerView hiển thị list ảnh phụ -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerExtraPhotos"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp"/>
 
             <!-- Ngày tương tác -->
             <TextView

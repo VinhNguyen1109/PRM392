@@ -6,52 +6,81 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
-
+import android.util.Log;
+import android.widget.*;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
-
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.familynoteapp.R;
 import com.example.familynoteapp.model.Interaction;
 
+import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
+import java.util.*;
 
 public class AddInteractionActivity extends AppCompatActivity {
 
     private Spinner spinnerType;
-    private EditText edtNote, edtCustomType;
+    private EditText edtNote;
     private ImageView imgPhoto;
     private TextView txtDate;
-    private Button btnSave;
+    private Button btnSave, btnAddExtraPhotos;
+    private RecyclerView recyclerExtraPhotos;
 
-    private Uri selectedImageUri = null;
+    private Uri mainImageUri;
+    private final List<Uri> extraImageUris = new ArrayList<>();
     private Date selectedDate = new Date();
-    private final Calendar calendar = Calendar.getInstance();
-    private int memberId;
+
+    private ExtraPhotoAdapter extraPhotoAdapter;
     private Interaction editingInteraction;
+    private int memberId;
+    private InteractionViewModel viewModel;
+    private int editingInteractionId = -1;
 
     private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    selectedImageUri = result.getData().getData();
-                    Glide.with(this).load(selectedImageUri).into(imgPhoto);
+                    Uri pickedUri = result.getData().getData();
+                    if (pickedUri != null) {
+                        String localPath = copyUriToLocalFile(pickedUri);
+                        if (localPath != null) {
+                            mainImageUri = Uri.fromFile(new File(localPath));
+                        } else {
+                            mainImageUri = pickedUri;
+                        }
+                        Glide.with(this).load(mainImageUri).into(imgPhoto);
+                    }
+                }
+            });
+
+    private final ActivityResultLauncher<Intent> multiImagePickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    Intent data = result.getData();
+                    if (data.getClipData() != null) {
+                        int count = data.getClipData().getItemCount();
+                        for (int i = 0; i < count; i++) {
+                            Uri uri = data.getClipData().getItemAt(i).getUri();
+                            String localPath = copyUriToLocalFile(uri);
+                            if (localPath != null) {
+                                extraImageUris.add(Uri.fromFile(new File(localPath)));
+                            }
+                        }
+                    } else if (data.getData() != null) {
+                        Uri uri = data.getData();
+                        String localPath = copyUriToLocalFile(uri);
+                        if (localPath != null) {
+                            extraImageUris.add(Uri.fromFile(new File(localPath)));
+                        }
+                    }
+                    updateExtraPhotos();
                 }
             });
 
@@ -60,150 +89,172 @@ public class AddInteractionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_interaction);
 
-        editingInteraction = (Interaction) getIntent().getSerializableExtra("edit_interaction");
+        viewModel = new ViewModelProvider(this).get(InteractionViewModel.class);
 
-        if (editingInteraction != null) {
-            memberId = editingInteraction.memberId;
+        editingInteractionId = getIntent().getIntExtra("edit_interaction_id", -1);
+        if (editingInteractionId != -1) {
+            // sửa: load từ DB
+            viewModel.getInteractionById(editingInteractionId).observe(this, item -> {
+                if (item != null) {
+                    editingInteraction = item;
+                    memberId = editingInteraction.memberId;
+                    bindDataToUI(editingInteraction);
+                }
+            });
         } else {
             memberId = getIntent().getIntExtra("memberId", -1);
         }
 
         if (memberId == -1) {
-            Toast.makeText(this, "Không tìm thấy người thân để ghi tương tác", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Không tìm thấy thành viên", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        onBinding();
-        onAction();
+        initViews();
+        setupListeners();
     }
 
-    private void onBinding() {
+    private void initViews() {
         spinnerType = findViewById(R.id.spinnerType);
         edtNote = findViewById(R.id.edtNote);
-        edtCustomType = findViewById(R.id.edtCustomType);
         imgPhoto = findViewById(R.id.imgPhoto);
         txtDate = findViewById(R.id.txtDate);
         btnSave = findViewById(R.id.btnSave);
+        btnAddExtraPhotos = findViewById(R.id.btnAddExtraPhotos);
+        recyclerExtraPhotos = findViewById(R.id.recyclerExtraPhotos);
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.interaction_types, android.R.layout.simple_spinner_item);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+                this, R.array.interaction_types, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerType.setAdapter(adapter);
 
-        spinnerType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selected = spinnerType.getSelectedItem().toString();
-                if (selected.equalsIgnoreCase("Khác")) {
-                    edtCustomType.setVisibility(View.VISIBLE);
-                } else {
-                    edtCustomType.setVisibility(View.GONE);
-                }
-            }
+        recyclerExtraPhotos.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        extraPhotoAdapter = new ExtraPhotoAdapter(this, new ArrayList<>());
+        recyclerExtraPhotos.setAdapter(extraPhotoAdapter);
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                edtCustomType.setVisibility(View.GONE);
+        // callback xoá ảnh phụ
+        extraPhotoAdapter.setOnPhotoRemoveListener(position -> {
+            if (position >= 0 && position < extraImageUris.size()) {
+                extraImageUris.remove(position);
+                updateExtraPhotos();
             }
         });
 
-        updateDateText();
+        txtDate.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate));
+    }
+
+    private void setupListeners() {
+        imgPhoto.setOnClickListener(v -> {
+            Intent pick = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            imagePickerLauncher.launch(pick);
+        });
+
+        btnAddExtraPhotos.setOnClickListener(v -> {
+            Intent pick = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            pick.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            multiImagePickerLauncher.launch(pick);
+        });
+
+        btnSave.setOnClickListener(v -> saveOrUpdateInteraction());
+
+        txtDate.setOnClickListener(v -> {
+            Calendar c = Calendar.getInstance();
+            new DatePickerDialog(this, (view, year, month, day) -> {
+                Calendar cal = Calendar.getInstance();
+                cal.set(year, month, day);
+                selectedDate = cal.getTime();
+                txtDate.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate));
+            }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show();
+        });
+    }
+
+    private void bindDataToUI(Interaction interaction) {
+        edtNote.setText(interaction.note);
+        selectedDate = interaction.date;
+        txtDate.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate));
+
+        if (interaction.photoUri != null) {
+            File file = new File(interaction.photoUri);
+            if (file.exists()) {
+                mainImageUri = Uri.fromFile(file);
+            } else {
+                mainImageUri = Uri.parse(interaction.photoUri);
+            }
+            Glide.with(this).load(mainImageUri).into(imgPhoto);
+        }
+
+        if (interaction.extraPhotoUris != null) {
+            extraImageUris.clear();
+            for (String uriStr : interaction.extraPhotoUris) {
+                File file = new File(uriStr);
+                if (file.exists()) {
+                    extraImageUris.add(Uri.fromFile(file));
+                } else {
+                    extraImageUris.add(Uri.parse(uriStr));
+                }
+            }
+            updateExtraPhotos();
+        }
+    }
+
+    private void saveOrUpdateInteraction() {
+        String type = spinnerType.getSelectedItem().toString();
+        String note = edtNote.getText().toString().trim();
+        String mainUriStr = (mainImageUri != null) ? mainImageUri.toString() : null;
+
+        List<String> extraUrisStr = new ArrayList<>();
+        for (Uri uri : extraImageUris) extraUrisStr.add(uri.toString());
 
         if (editingInteraction != null) {
-            spinnerType.setSelection(getSpinnerIndex(spinnerType, editingInteraction.type));
-            edtNote.setText(editingInteraction.note);
-            selectedDate = editingInteraction.date;
-            updateDateText();
-            if (editingInteraction.photoUri != null) {
-                selectedImageUri = Uri.parse(editingInteraction.photoUri);
-                Glide.with(this).load(selectedImageUri).into(imgPhoto);
-            }
+            editingInteraction.type = type;
+            editingInteraction.note = note;
+            editingInteraction.photoUri = mainUriStr;
+            editingInteraction.date = selectedDate;
+            editingInteraction.extraPhotoUris = extraUrisStr;
+
+            viewModel.update(editingInteraction);
+            returnResultAndFinish(editingInteraction);
+        } else {
+            Interaction newInteraction = new Interaction();
+            newInteraction.memberId = memberId;
+            newInteraction.type = type;
+            newInteraction.note = note;
+            newInteraction.photoUri = mainUriStr;
+            newInteraction.date = selectedDate;
+            newInteraction.extraPhotoUris = extraUrisStr;
+
+            viewModel.insert(newInteraction);
+            returnResultAndFinish(newInteraction);
         }
     }
 
-    private void onAction() {
-        txtDate.setOnClickListener(v -> {
-            DatePickerDialog dialog = new DatePickerDialog(this, dateSetListener,
-                    calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
-            dialog.show();
-        });
-
-        imgPhoto.setOnClickListener(v -> {
-            Intent pickImage = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            imagePickerLauncher.launch(pickImage);
-        });
-
-        btnSave.setOnClickListener(v -> {
-            String selectedType = spinnerType.getSelectedItem().toString();
-            String typeToSave = selectedType;
-
-            if (selectedType.equalsIgnoreCase("Khác")) {
-                typeToSave = edtCustomType.getText().toString().trim();
-                if (typeToSave.isEmpty()) {
-                    Toast.makeText(this, "Vui lòng nhập loại tương tác tùy chọn", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-            }
-
-            final String finalType = typeToSave;
-            String note = edtNote.getText().toString().trim();
-            String photoUri = selectedImageUri != null ? selectedImageUri.toString() : null;
-
-            InteractionViewModel viewModel = new ViewModelProvider(this).get(InteractionViewModel.class);
-
-            if (editingInteraction != null) {
-                new AlertDialog.Builder(this)
-                        .setTitle("Xác nhận cập nhật")
-                        .setMessage("Bạn có chắc muốn cập nhật tương tác này?")
-                        .setPositiveButton("Cập nhật", (dialog, which) -> {
-                            editingInteraction.type = finalType;
-                            editingInteraction.note = note;
-                            editingInteraction.photoUri = photoUri;
-                            editingInteraction.date = selectedDate;
-
-                            viewModel.update(editingInteraction);
-                            Toast.makeText(this, "Đã cập nhật tương tác", Toast.LENGTH_SHORT).show();
-                            setResult(RESULT_OK);
-                            finish();
-                        })
-                        .setNegativeButton("Huỷ", null)
-                        .show();
-            } else {
-                Interaction interaction = new Interaction();
-                interaction.memberId = memberId;
-                interaction.type = finalType;
-                interaction.note = note;
-                interaction.photoUri = photoUri;
-                interaction.date = selectedDate;
-
-                viewModel.insert(interaction);
-                Toast.makeText(this, "Đã ghi tương tác", Toast.LENGTH_SHORT).show();
-                setResult(RESULT_OK);
-                finish();
-            }
-        });
+    private void returnResultAndFinish(Interaction interaction) {
+        Intent intent = new Intent();
+        intent.putExtra("new_interaction", interaction);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
-    private final DatePickerDialog.OnDateSetListener dateSetListener = (view, year, month, dayOfMonth) -> {
-        calendar.set(Calendar.YEAR, year);
-        calendar.set(Calendar.MONTH, month);
-        calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-        selectedDate = calendar.getTime();
-        updateDateText();
-    };
-
-    private void updateDateText() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        txtDate.setText(sdf.format(selectedDate));
+    private void updateExtraPhotos() {
+        List<String> list = new ArrayList<>();
+        for (Uri uri : extraImageUris) list.add(uri.toString());
+        extraPhotoAdapter.updateData(list);
     }
 
-    private int getSpinnerIndex(Spinner spinner, String value) {
-        for (int i = 0; i < spinner.getCount(); i++) {
-            if (spinner.getItemAtPosition(i).toString().equalsIgnoreCase(value)) {
-                return i;
+    private String copyUriToLocalFile(Uri uri) {
+        try (InputStream in = getContentResolver().openInputStream(uri)) {
+            if (in == null) return null;
+            File file = new File(getCacheDir(), "photo_" + System.currentTimeMillis() + ".jpg");
+            try (OutputStream out = new FileOutputStream(file)) {
+                byte[] buf = new byte[4096];
+                int len;
+                while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
             }
+            return file.getAbsolutePath();
+        } catch (Exception e) {
+            Log.e("AddInteraction", "copyUriToLocalFile error: " + e.getMessage());
+            return null;
         }
-        return 0;
     }
 }

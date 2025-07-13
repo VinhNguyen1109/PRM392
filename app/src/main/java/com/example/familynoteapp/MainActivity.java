@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -28,91 +29,136 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private FamilyAdapter adapter;
     private MainViewModel viewModel;
-
     private FloatingActionButton faAdd;
+    private SearchView searchView;
 
-//    private BottomNavigationView bottomNav;
-    private final ActivityResultLauncher<Intent> addMemberLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK) {
-                    viewModel.getAllFamily().observe(this,
-                            list -> adapter.submitList(new ArrayList<>(list)));
-                }
-            });
+    private final ActivityResultLauncher<Intent> addMemberLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == RESULT_OK) {
+                            refreshFamilyList();
+                        }
+                    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        Intent intent = new Intent(this, ScheduleForegroundService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d("vinhnc", "Starting ScheduleForegroundService in foreground");
-            startForegroundService(intent);
-        } else {
-            Log.d("vinhnc", "Starting ScheduleForegroundService in background 2");
-            startService(intent);
-        }
-
-        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
-
-        onBinding();
-        onAction();
+        startScheduleService();
+        initViewModel();
+        bindViews();
+        setupRecyclerView();
+        setupActions();
+        observeFamilyList();
     }
 
-    private void onBinding() {
+    private void startScheduleService() {
+        Intent intent = new Intent(this, ScheduleForegroundService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d("MainActivity", "Starting ScheduleForegroundService in foreground");
+            startForegroundService(intent);
+        } else {
+            Log.d("MainActivity", "Starting ScheduleForegroundService in background");
+            startService(intent);
+        }
+    }
+
+    private void initViewModel() {
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+    }
+
+    private void bindViews() {
         faAdd = findViewById(R.id.fabAdd);
-//        bottomNav = findViewById(R.id.bottomNavigation);
+        searchView = findViewById(R.id.searchView);
+        recyclerView = findViewById(R.id.recyclerView);
+    }
+
+    private void setupRecyclerView() {
         adapter = new FamilyAdapter(this, viewModel);
         adapter.setOnItemActionListener(new FamilyAdapter.OnItemActionListener() {
             @Override
             public void onEditClicked(FamilyMember member) {
-                showEditConfirmation(member);
+                editMember(member);
             }
 
             @Override
             public void onDeleteClicked(FamilyMember member) {
-                showDeleteConfirmation(member);
+                confirmDeleteMember(member);
             }
 
             @Override
             public void onItemClicked(FamilyMember member) {
-                if (member == null) {
-                    Log.e("MainActivity", "onItemClicked: member is null");
-                    return;
-                }
-
-                Log.d("MainActivity", "onItemClicked: " + member.name);
-
-                Intent intent = new Intent(MainActivity.this, FamilyDetailActivity.class);
-                intent.putExtra("member_id", member.id);  // chỉ gửi ID
-                startActivity(intent);
+                openMemberDetail(member);
             }
         });
-
-        recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
-
-        viewModel.getAllFamily().observe(this,
-                list -> adapter.submitList(new ArrayList<>(list)));
     }
 
-    private void onAction() {
+    private void setupActions() {
         faAdd.setOnClickListener(v -> {
             Intent intent = new Intent(this, AddFamilyMemberActivity.class);
             addMemberLauncher.launch(intent);
         });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterFamilyList(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterFamilyList(newText);
+                return true;
+            }
+        });
     }
 
-    private void showEditConfirmation(FamilyMember member) {
+    private void observeFamilyList() {
+        viewModel.getAllFamily().observe(this, list -> {
+            adapter.submitList(new ArrayList<>(list));
+        });
+    }
+
+    private void refreshFamilyList() {
+        viewModel.getAllFamily().observe(this, list -> {
+            adapter.submitList(new ArrayList<>(list));
+        });
+    }
+
+    private void filterFamilyList(String keyword) {
+        viewModel.getAllFamily().observe(this, list -> {
+            if (list == null) return;
+            ArrayList<FamilyMember> filtered = new ArrayList<>();
+            for (FamilyMember member : list) {
+                if (member.name.toLowerCase().contains(keyword.toLowerCase())
+                        || member.relationship.toLowerCase().contains(keyword.toLowerCase())) {
+                    filtered.add(member);
+                }
+            }
+            adapter.submitList(filtered);
+        });
+    }
+
+    private void openMemberDetail(FamilyMember member) {
+        if (member == null) {
+            Log.e("MainActivity", "onItemClicked: member is null");
+            return;
+        }
+        Intent intent = new Intent(this, FamilyDetailActivity.class);
+        intent.putExtra("member_id", member.id);
+        startActivity(intent);
+    }
+
+    private void editMember(FamilyMember member) {
         Intent intent = new Intent(this, AddFamilyMemberActivity.class);
         intent.putExtra("edit_member", member);
         startActivity(intent);
     }
 
-    private void showDeleteConfirmation(FamilyMember member) {
+    private void confirmDeleteMember(FamilyMember member) {
         new AlertDialog.Builder(this)
                 .setTitle("Xác nhận xoá")
                 .setMessage("Bạn có chắc muốn xoá người thân này?")

@@ -49,4 +49,11 @@ public class InteractionViewModel extends AndroidViewModel {
                 .familyMemberDao()
                 .getMemberById(memberId);
     }
+
+
+    public LiveData<Interaction> getInteractionById(int interactionId) {
+        return AppDatabaseSingleton.getInstance(getApplication())
+                .interactionDao()
+                .getById2(interactionId);
+    }
 }

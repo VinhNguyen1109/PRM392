@@ -66,7 +66,7 @@ public class InteractionAdapter extends ListAdapter<Interaction, InteractionAdap
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
         holder.txtDate.setText("Ngày: " + sdf.format(interaction.date));
 
-        if (interaction.photoUri != null) {
+        if (interaction.photoUri != null && !interaction.photoUri.isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(interaction.photoUri)
                     .placeholder(R.drawable.ic_image_placeholder)
@@ -77,7 +77,7 @@ public class InteractionAdapter extends ListAdapter<Interaction, InteractionAdap
 
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, InteractionDetailActivity.class);
-            intent.putExtra("interaction_detail", interaction);
+            intent.putExtra("interaction_id", interaction.id);
             context.startActivity(intent);
         });
 
@@ -93,7 +93,8 @@ public class InteractionAdapter extends ListAdapter<Interaction, InteractionAdap
                 .setItems(new CharSequence[]{"Sửa", "Xoá"}, (dialog, which) -> {
                     if (which == 0) {
                         Intent editIntent = new Intent(context, AddInteractionActivity.class);
-                        editIntent.putExtra("edit_interaction", interaction);
+                        // ✅ sửa: chỉ truyền id
+                        editIntent.putExtra("edit_interaction_id", interaction.id);
                         context.startActivity(editIntent);
                     } else {
                         new AlertDialog.Builder(context)
@@ -109,7 +110,6 @@ public class InteractionAdapter extends ListAdapter<Interaction, InteractionAdap
                 })
                 .show();
     }
-
 
     static class InteractionViewHolder extends RecyclerView.ViewHolder {
         TextView txtType, txtNote, txtDate;

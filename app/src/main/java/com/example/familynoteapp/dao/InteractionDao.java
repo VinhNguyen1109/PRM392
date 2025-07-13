@@ -32,6 +32,8 @@ public interface InteractionDao {
 
     @Query("SELECT * FROM interactions WHERE id = :id")
     Interaction getById(int id);
+    @Query("SELECT * FROM interactions WHERE id = :id")
+    LiveData<Interaction> getById2(int id);
 
     @Query("SELECT COUNT(*) FROM interactions")
     LiveData<Integer> getTotalCount();
