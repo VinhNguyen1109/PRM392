@@ -40,5 +40,8 @@ public class DashboardViewModel extends AndroidViewModel {
                 .interactionDao()
                 .getInteractionCountsPerMember();
     }
+    public LiveData<List<FamilyMember>> getAllFamilyMembers() {
+        return db.familyMemberDao().getAll(); // hoặc repository.getAllMembers()
+    }
 
 }
